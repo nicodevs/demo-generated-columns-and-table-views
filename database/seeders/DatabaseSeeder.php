@@ -2,22 +2,31 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Team;
+use App\Models\Item;
+use App\Models\Player;
+use App\Models\BarProduct;
+use App\Models\FooProduct;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        FooProduct::factory(20)->create();
+        BarProduct::factory(20)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $teams = Team::factory(100)->create();
+        $players = Player::factory(1000)->recycle($teams)->create();
+
+        for ($i = 0; $i < 52; $i++) {
+            $dateString = now()->subWeek($i)->format('Y-m-d H:i:s');
+
+            $items = Item::factory(10_000)->recycle($players)->make()->map(function ($item) use ($dateString) {
+                return [...$item->toArray(), 'created_at' => $dateString, 'updated_at' => $dateString];
+            })->toArray();
+
+            Item::insert($items);
+        }
     }
 }
